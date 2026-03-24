@@ -47,6 +47,9 @@ class Obstacle:
     def is_dead(self):
         return self.lives <= 0
     
+    def check_collision(self, other_rect):
+        return self.rect.colliderect(other_rect)
+    
     
 def spawn_obstacle(screen_width: int, screen_height: int, images: dict) -> Obstacle:
     obstacle_type = random.choice(list(images.keys()))
