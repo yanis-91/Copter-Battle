@@ -1,6 +1,5 @@
 import pygame
 
-# --- INITIALISATION ---
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
@@ -9,8 +8,17 @@ pygame.display.set_caption("Copter Battle")
 info = pygame.display.Info()
 SCREEN_WIDTH, SCREEN_HEIGHT = info.current_w, info.current_h
 
-image_fond = pygame.image.load('./images/fond(1).png').convert()
-image_fond = pygame.transform.scale(image_fond, (SCREEN_WIDTH, SCREEN_HEIGHT))
+image_fond_menu = pygame.image.load('../images/fond(1).png').convert()
+image_fond_menu = pygame.transform.scale(image_fond_menu, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+image_desert = pygame.image.load('../images/fond(2).png').convert()
+image_desert = pygame.transform.scale(image_desert, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+img_helico1 = pygame.image.load('../images/helicoJ1-removebg-preview.png').convert_alpha()
+img_helico1 = pygame.transform.scale(img_helico1, (210, 180))
+
+img_helico2 = pygame.image.load('../images/helicoJ2-removebg-preview.png').convert_alpha()
+img_helico2 = pygame.transform.scale(img_helico2, (210, 180))
 
 Vert = (120, 150, 80)
 Blanc = (255, 255, 255)
@@ -20,67 +28,86 @@ Gris_fonce = (100, 100, 100)
 
 font_titre = pygame.font.SysFont("Impact", 150)
 font_menu = pygame.font.SysFont("Arial", 30, bold=True)
+font_sub = pygame.font.SysFont("Arial", 25, bold=False)
 
 bouton_lancer = pygame.Rect(SCREEN_WIDTH // 2 - 250, SCREEN_HEIGHT // 2 + 50, 220, 70)
 bouton_rejoindre = pygame.Rect(SCREEN_WIDTH // 2 + 30, SCREEN_HEIGHT // 2 + 50, 220, 70)
 
-etape = "ACCUEIL"  # ACCUEIL, MENU_CHOIX, EN_JEU
+h1_x, h1_y = 50, 100
+h2_x, h2_y = 50, SCREEN_HEIGHT - 250
+
+etape = "ACCUEIL"
 
 while running:
-
     mouse_pos = pygame.mouse.get_pos()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
-
-            # Gestion des étapes
             if etape == "ACCUEIL" and event.key == pygame.K_SPACE:
                 etape = "MENU_CHOIX"
-
-        if etape == "MENU_CHOIX" and event.type == pygame.MOUSEBUTTONDOWN:
-            if bouton_lancer.collidepoint(mouse_pos) or bouton_rejoindre.collidepoint(mouse_pos):
+            elif etape == "ATTENTE_J2" and event.key == pygame.K_SPACE:
                 etape = "EN_JEU"
 
-    # 2. fill the screen to wipe away anything from last frame
-    screen.blit(image_fond, (0, 0))
+        if etape == "MENU_CHOIX" and event.type == pygame.MOUSEBUTTONDOWN:
+            if bouton_lancer.collidepoint(mouse_pos):
+                etape = "ATTENTE_J2"
+            elif bouton_rejoindre.collidepoint(mouse_pos):
+                etape = "ATTENTE"
 
-    # 3. Affichage selon l'étape
+    # --- PARTIE DESSIN PAR ETAPE ---
+
     if etape == "ACCUEIL":
-        # Titre Vert Camo (Simple)
+        screen.blit(image_fond_menu, (0, 0))  # Fond ici
         txt_titre = font_titre.render("COPTER BATTLE", True, Vert)
-        rect_titre = txt_titre.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
-        screen.blit(txt_titre, rect_titre)
-
+        screen.blit(txt_titre, txt_titre.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100)))
         txt_msg = font_menu.render("APPUYEZ SUR ESPACE POUR COMMENCER", True, Blanc)
-        rect_msg = txt_msg.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
-        screen.blit(txt_msg, rect_msg)
+        screen.blit(txt_msg, txt_msg.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)))
 
     elif etape == "MENU_CHOIX":
-        # Voile sombre
+        screen.blit(image_fond_menu, (0, 0))  # Fond ici aussi
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         screen.blit(overlay, (0, 0))
 
-        # Dessin des boutons (LANCER / REJOINDRE)
-        for btn, txt in [(bouton_lancer, "LANCER"), (bouton_rejoindre, "REJOINDRE")]:
-            couleur = Gris_fonce if btn.collidepoint(mouse_pos) else Gris
-            pygame.draw.rect(screen, couleur, btn, border_radius=10)
-            txt_surf = font_menu.render(txt, True, Noir)
-            screen.blit(txt_surf, (btn.centerx - txt_surf.get_width() // 2, btn.centery - txt_surf.get_height() // 2))
+        if bouton_lancer.collidepoint(mouse_pos):
+            c_lancer = Gris_fonce
+        else:
+            c_lancer = Gris
+        pygame.draw.rect(screen, c_lancer, bouton_lancer, border_radius=10)
+        t_lancer = font_menu.render("LANCER", True, Noir)
+        screen.blit(t_lancer, t_lancer.get_rect(center=bouton_lancer.center))
+
+        if bouton_rejoindre.collidepoint(mouse_pos):
+            c_rejoindre = Gris_fonce
+        else:
+            c_rejoindre = Gris
+        pygame.draw.rect(screen, c_rejoindre, bouton_rejoindre, border_radius=10)
+        t_rejoindre = font_menu.render("REJOINDRE", True, Noir)
+        screen.blit(t_rejoindre, t_rejoindre.get_rect(center=bouton_rejoindre.center))
+
+    elif etape == "ATTENTE_J2":
+        screen.blit(image_desert, (0, 0))  # Fond desert ici
+        screen.blit(img_helico1, (h1_x, h1_y))
+        txt_attente = font_menu.render("EN ATTENTE JOUEUR 2", True, Blanc)
+        txt_action = font_sub.render("appuyer sur espace pour rejoindre", True, Gris)
+        screen.blit(txt_attente, txt_attente.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
+        screen.blit(txt_action, txt_action.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)))
+
+    elif etape == "ATTENTE":
+        screen.blit(image_desert, (0, 0))  # Fond desert ici
+        txt_wait = font_menu.render("RECHERCHE D'UN ADVERSAIRE...", True, Blanc)
+        screen.blit(txt_wait, txt_wait.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
 
     elif etape == "EN_JEU":
-        # Pour l'instant, on dessine leur rectangle blanc de test sans recréer la fenêtre
-        pygame.draw.rect(pygame.display.set_mode((500,300)),(Blanc),[100,100,150,150])
+        screen.blit(image_desert, (0, 0))  # Fond desert ici
+        screen.blit(img_helico1, (h1_x, h1_y))
+        screen.blit(img_helico2, (h2_x, h2_y))
 
-    # 4. flip() the display to put your work on screen
     pygame.display.flip()
-
-    clock.tick(60)  # limits FPS to 60
+    clock.tick(60)
 
 pygame.quit()
