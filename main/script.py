@@ -8,16 +8,16 @@ pygame.display.set_caption("Copter Battle")
 info = pygame.display.Info()
 SCREEN_WIDTH, SCREEN_HEIGHT = info.current_w, info.current_h
 
-image_fond_menu = pygame.image.load('../images/fond(1).png').convert()
+image_fond_menu = pygame.image.load('./images/fond_accueil.png').convert()
 image_fond_menu = pygame.transform.scale(image_fond_menu, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-image_desert = pygame.image.load('../images/fond(2).png').convert()
+image_desert = pygame.image.load('./images/fond_jeu.png').convert()
 image_desert = pygame.transform.scale(image_desert, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-img_helico1 = pygame.image.load('../images/helicoJ1-removebg-preview.png').convert_alpha()
+img_helico1 = pygame.image.load('./images/helicoJ1-removebg-preview.png').convert_alpha()
 img_helico1 = pygame.transform.scale(img_helico1, (210, 180))
 
-img_helico2 = pygame.image.load('../images/helicoJ2-removebg-preview.png').convert_alpha()
+img_helico2 = pygame.image.load('./images/helicoJ2-removebg-preview.png').convert_alpha()
 img_helico2 = pygame.transform.scale(img_helico2, (210, 180))
 
 Vert = (120, 150, 80)
