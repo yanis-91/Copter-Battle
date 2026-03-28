@@ -27,6 +27,11 @@ img_helico1 = pygame.transform.scale(img_helico1, (210, 180))
 img_helico2 = pygame.image.load('./images/helicoJ2.png').convert_alpha()
 img_helico2 = pygame.transform.scale(img_helico2, (210, 180))
 
+gif_chargement = []
+for i in range(1, 9):  # 8 frames
+    img = pygame.image.load(f'./images/gif/loading_{i}.png').convert_alpha()
+    gif_chargement.append(img)
+
 touches_j1 = {"gauche": pygame.K_q, "droite": pygame.K_d, "haut": pygame.K_z, "bas": pygame.K_s, "bonus": pygame.K_a}
 touches_j2 = {"gauche": pygame.K_LEFT, "droite": pygame.K_RIGHT, "haut": pygame.K_UP, "bas": pygame.K_DOWN, "bonus": pygame.K_RSHIFT}
 
@@ -117,15 +122,20 @@ while running:
     elif etape == "ATTENTE_J2":
         screen.blit(image_desert, (0, 0))  # Fond desert ici
         screen.blit(img_helico1, (h1_x, h1_y))
+        frame_index = (pygame.time.get_ticks() // 100) % len(gif_chargement)
         txt_attente = font_menu.render("EN ATTENTE JOUEUR 2", True, Blanc)
         txt_action = font_sub.render("appuyer sur espace pour rejoindre", True, Gris)
         screen.blit(txt_attente, txt_attente.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
         screen.blit(txt_action, txt_action.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)))
+        screen.blit(gif_chargement[frame_index], (SCREEN_WIDTH - 200, SCREEN_HEIGHT - 150))
 
     elif etape == "ATTENTE":
         screen.blit(image_desert, (0, 0))  # Fond desert ici
+        frame_index = (pygame.time.get_ticks() // 100) % len(gif_chargement)
         txt_wait = font_menu.render("RECHERCHE D'UN ADVERSAIRE...", True, Blanc)
         screen.blit(txt_wait, txt_wait.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
+        screen.blit(gif_chargement[frame_index], (SCREEN_WIDTH - 200, SCREEN_HEIGHT - 150))
+
 
     elif etape == "EN_JEU":
         screen.blit(image_desert, (0, 0))
