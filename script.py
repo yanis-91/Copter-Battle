@@ -25,7 +25,7 @@ image_coeur = pygame.image.load('./images/coeur.png').convert_alpha()
 image_coeur = pygame.transform.scale(image_coeur, (25, 25))
 
 image_cadre = pygame.image.load('./images/cadre.png').convert_alpha()
-image_cadre = pygame.transform.scale(image_cadre, (50,50 ))
+image_cadre = pygame.transform.scale(image_cadre, (150,100))
 #Images pour hélicos
 
 img_helico1 = pygame.image.load('./images/helicoJ1.png').convert_alpha()
@@ -73,6 +73,12 @@ images_bonus = {
     "bouclier": img_bonus_bouclier
 }
 
+bonus_icons_hud = {
+    "bombe": pygame.transform.smoothscale(img_bonus_bombe, (30, 30)),
+    "rafale": pygame.transform.smoothscale(img_bonus_rafale, (30, 30)),
+    "bouclier": pygame.transform.smoothscale(img_bonus_bouclier, (30, 30)),
+}
+
 bonuses = []
 bonus_spawn_timer = 0
 
@@ -86,6 +92,17 @@ Gris_fonce = (100, 100, 100)
 font_titre = pygame.font.SysFont("Impact", 150)
 font_menu = pygame.font.SysFont("Arial", 30, bold=True)
 font_sub = pygame.font.SysFont("Arial", 25, bold=False)
+font_bonus = pygame.font.SysFont("Arial", 18, bold=True)
+
+
+def get_current_bonus(helico):
+    if helico.has_shield:
+        return "bouclier"
+    if helico.mode_rafale:
+        return "rafale"
+    if helico.bonus_bombes:
+        return "bombe"
+    return None
 
 bouton_lancer = pygame.Rect(SCREEN_WIDTH // 2 - 250, SCREEN_HEIGHT // 2 + 50, 220, 70)
 bouton_rejoindre = pygame.Rect(SCREEN_WIDTH // 2 + 30, SCREEN_HEIGHT // 2 + 50, 220, 70)
@@ -170,7 +187,7 @@ while running:
         txt_vie_j2 = font_sub.render(f"Joueur 2:", True, Blanc)
 
         txt_vie_j1_rect = txt_vie_j1.get_rect(topleft=(20, 20))
-        reserve_coeurs_j2 = 10 + image_coeur.get_width() + max(0, helico2.lives - 1) * 30
+        reserve_coeurs_j2 = 10 + image_coeur.get_width() + max(0, helico2.lives - 1) * 30 + 15 + image_cadre.get_width()
         txt_vie_j2_rect = txt_vie_j2.get_rect(topright=(SCREEN_WIDTH - 20 - reserve_coeurs_j2, 20))
 
         screen.blit(txt_vie_j1, txt_vie_j1_rect)
@@ -182,6 +199,36 @@ while running:
         for i in range (helico2.lives):
             coeur_j2_rect = image_coeur.get_rect(midleft=(txt_vie_j2_rect.right + 10 + i*30, txt_vie_j2_rect.centery))
             screen.blit(image_coeur, coeur_j2_rect)
+
+        if helico1.lives > 0:
+            coeurs_j1_fin = txt_vie_j1_rect.right + 10 + (helico1.lives - 1) * 30 + image_coeur.get_width()
+        else:
+            coeurs_j1_fin = txt_vie_j1_rect.right
+
+        if helico2.lives > 0:
+            coeurs_j2_fin = txt_vie_j2_rect.right + 10 + (helico2.lives - 1) * 30 + image_coeur.get_width()
+        else:
+            coeurs_j2_fin = txt_vie_j2_rect.right
+
+        cadre_j1_rect = image_cadre.get_rect(midleft=(coeurs_j1_fin + 15, txt_vie_j1_rect.centery))
+        cadre_j2_rect = image_cadre.get_rect(midleft=(coeurs_j2_fin + 15, txt_vie_j2_rect.centery))
+
+        screen.blit(image_cadre, cadre_j1_rect)
+        screen.blit(image_cadre, cadre_j2_rect)
+
+        bonus_j1 = get_current_bonus(helico1)
+        bonus_j2 = get_current_bonus(helico2)
+
+        if bonus_j1:
+            icon_j1 = bonus_icons_hud[bonus_j1]
+            icon_j1_rect = icon_j1.get_rect(center=cadre_j1_rect.center)
+            screen.blit(icon_j1, icon_j1_rect)
+
+        if bonus_j2:
+            icon_j2 = bonus_icons_hud[bonus_j2]
+            icon_j2_rect = icon_j2.get_rect(center=cadre_j2_rect.center)
+            screen.blit(icon_j2, icon_j2_rect)
+            
 
         # Spawn aléatoire
         spawn_timer += 1

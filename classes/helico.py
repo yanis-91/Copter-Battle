@@ -11,10 +11,10 @@ class Helicopter:
         self.lives = lives
         self.rect = self.image.get_rect(topleft=(x, y))
         self.touches = touches
-        self.nb_bombes = 0
+        self.bonus_bombes = False
         self.mode_rafale = False
-        self.temps_rafale = 0
-        self.temps_bouclier = 0
+        self.nb_rafale = 2
+        self.temps_bouclier = 2
 
     def move(self, screen_width, screen_height):
         if self.rect.left > 0: self.rect.x -= 1

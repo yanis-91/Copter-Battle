@@ -18,7 +18,7 @@ class Bonus:
 
     def apply(self, helicopter):
         if self.bonus_type == "bombe":
-            helicopter.nb_bombes += 1
+            helicopter.bonus_bombes = True
 
         elif self.bonus_type == "rafale":
             helicopter.mode_rafale = True
