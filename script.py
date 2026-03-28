@@ -1,4 +1,4 @@
-import pygame
+import pygame, random
 from classes.helico import Helicopter
 from classes.obstacle import Obstacle, spawn_obstacle
 from classes.bonus import Bonus
@@ -48,7 +48,7 @@ images_obstacles = {
 }
 
 obstacles = []
-spawn_timer = 0
+spawn_timer = 0  
 
 Vert = (120, 150, 80)
 Blanc = (255, 255, 255)
