@@ -200,6 +200,12 @@ while running:
             obs.shoot()
             obs.update_projectiles()
             screen.blit(obs.image, obs.hitbox)
+            if obs.check_collision(helico1):
+              helico1.take_damage()
+              obs.take_damage()
+            if obs.check_collision(helico2):
+              helico2.take_damage()
+              obs.take_damage()
 
          # Mettre à jour et dessiner les bonus
         for bonus in bonuses:
@@ -224,6 +230,10 @@ while running:
         print(helico1.lives, helico2.lives)
         screen.blit(helico1.image, helico1.rect)
         screen.blit(helico2.image, helico2.rect)
+        if helico1.check_collision(helico2):
+           helico2.image.set_alpha(128)
+        else:
+           helico2.image.set_alpha(255)
         
     pygame.display.flip()
     clock.tick(60)
