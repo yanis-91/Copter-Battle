@@ -11,6 +11,10 @@ class Helicopter:
         self.lives = lives
         self.rect = self.image.get_rect(topleft=(x, y))
         self.touches = touches
+        self.nb_bombes = 0
+        self.mode_rafale = False
+        self.temps_rafale = 0
+        self.temps_bouclier = 0
 
     def move(self, screen_width, screen_height):
         keys = pygame.key.get_pressed()
