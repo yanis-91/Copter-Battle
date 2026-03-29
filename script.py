@@ -71,6 +71,15 @@ images_obstacles = {
 
 obstacles = []
 spawn_timer = 0
+active_bombs = []
+BOMB_SPEED = 8
+BOMB_FUSE_MS = 700
+BOMB_EXPLOSION_MS = 350
+BOMB_ZONE_SIZE = (170, 140)
+active_player_projectiles = []
+pending_rafales = []
+PLAYER_SHOT_SPEED = 10
+RAFALE_INTERVAL_MS = 120
 
 
 img_bonus_bombe = pygame.image.load('./images/bombe.png').convert_alpha()
@@ -79,6 +88,9 @@ img_bonus_rafale = pygame.image.load('./images/rafale_tir.png').convert_alpha()
 img_bonus_rafale = pygame.transform.scale(img_bonus_rafale, (60, 50))
 img_bonus_bouclier = pygame.image.load('./images/bouclier.png').convert_alpha()
 img_bonus_bouclier = pygame.transform.scale(img_bonus_bouclier, (70, 70))
+img_bulle_bouclier = pygame.image.load('./images/bulle_bouclier.png').convert_alpha()
+img_bulle_bouclier = pygame.transform.scale(img_bulle_bouclier, (150, 130))
+img_bulle_bouclier.set_alpha(128)
 
 images_bonus = {
     "bombe": img_bonus_bombe,
@@ -116,6 +128,28 @@ def get_current_bonus(helico):
     if helico.bonus_bombes:
         return "bombe"
     return None
+
+
+def apply_bonus_effect(helico, bonus_type, obstacles):
+    if bonus_type == "bombe":
+        bomb_rect = img_bonus_bombe.get_rect(midright=(helico.rect.left, helico.rect.centery))
+        active_bombs.append({
+            "rect": bomb_rect,
+            "spawn_time": pygame.time.get_ticks(),
+            "exploded": False,
+            "explosion_start": 0,
+            "damage_done": False,
+        })
+    elif bonus_type == "rafale":
+        pending_rafales.append({
+            "helico": helico,
+            "remaining": helico.nb_rafale,
+            "next_fire": pygame.time.get_ticks(),
+        })
+    elif bonus_type == "bouclier":
+        helico.set_transparency(True)
+        helico.transparent_until = pygame.time.get_ticks() + helico.temps_bouclier
+        helico.activate_shield_visual()
 
 bouton_lancer = pygame.Rect(SCREEN_WIDTH // 2 - 250, SCREEN_HEIGHT // 2 + 50, 220, 70)
 bouton_rejoindre = pygame.Rect(SCREEN_WIDTH // 2 + 30, SCREEN_HEIGHT // 2 + 50, 220, 70)
@@ -160,15 +194,38 @@ while running:
             # REJOUER
         if etape == "GAME_OVER" and event.type == pygame.MOUSEBUTTONDOWN:
             if bouton_rejouer.collidepoint(mouse_pos):
-                helico1.lives = 3
-                helico2.lives = 3
+                helico1.lives = LIVES
+                helico2.lives = LIVES
                 # On utilise .rect.topleft pour déplacer les objets Helicopter
                 helico1.rect.topleft = (50, 100)
                 helico2.rect.topleft = (50, SCREEN_HEIGHT - 250)
+                helico1.bonus_shield = False
+                helico1.bonus_bombes = False
+                helico1.bonus_rafale = False
+                helico2.bonus_shield = False
+                helico2.bonus_bombes = False
+                helico2.bonus_rafale = False
+                helico1.set_transparency(False)
+                helico2.set_transparency(False)
+                helico1.transparent_until = 0
+                helico2.transparent_until = 0
+                helico1.shield_visual_until = 0
+                helico2.shield_visual_until = 0
+                helico1.pending_bonus = None
+                helico2.pending_bonus = None
+                helico1.bonus_key_was_pressed = False
+                helico2.bonus_key_was_pressed = False
                 obstacles.clear()
                 bonuses.clear()
+                active_bombs.clear()
+                active_player_projectiles.clear()
+                pending_rafales.clear()
+                spawn_timer = 0
+                bonus_spawn_timer = 0
                 helico_mort = None
                 explosion_start_time = None
+                winner_text = ""
+                temps_final = ""
                 etape = "ATTENTE_J2"
     # --- PARTIE DESSIN PAR ETAPE ---
 
@@ -273,13 +330,6 @@ while running:
             coeur_j2_rect = image_coeur.get_rect(midleft=(txt_vie_j2_rect.right + 10 + i * 30, txt_vie_j2_rect.centery))
             screen.blit(image_coeur, coeur_j2_rect)
 
-        for i in range (helico1.lives):
-            coeur_j1_rect = image_coeur.get_rect(midleft=(txt_vie_j1_rect.right + 10 + i*30, txt_vie_j1_rect.centery))
-            screen.blit(image_coeur, coeur_j1_rect)
-        for i in range (helico2.lives):
-            coeur_j2_rect = image_coeur.get_rect(midleft=(txt_vie_j2_rect.right + 10 + i*30, txt_vie_j2_rect.centery))
-            screen.blit(image_coeur, coeur_j2_rect)
-
         if helico1.lives > 0:
             coeurs_j1_fin = txt_vie_j1_rect.right + 10 + (helico1.lives - 1) * 30 + image_coeur.get_width()
         else:
@@ -361,16 +411,115 @@ while running:
         # Supprimer les bonus hors écran
         bonuses = [b for b in bonuses if not b.rect.right < 0 and b.active]
 
+        # Mettre à jour et dessiner les bombes (largage arrière + zone d'explosion)
+        now = pygame.time.get_ticks()
+        for bomb in active_bombs[:]:
+            if not bomb["exploded"]:
+                bomb["rect"].x -= BOMB_SPEED
+                screen.blit(img_bonus_bombe, bomb["rect"])
+
+                if now - bomb["spawn_time"] >= BOMB_FUSE_MS:
+                    bomb["exploded"] = True
+                    bomb["explosion_start"] = now
+            else:
+                zone_rect = pygame.Rect(0, 0, BOMB_ZONE_SIZE[0], BOMB_ZONE_SIZE[1])
+                zone_rect.center = bomb["rect"].center
+
+                # Animation visuelle de l'explosion
+                frame_index = ((now - bomb["explosion_start"]) // 80) % len(gif_explosion)
+                explosion_image = pygame.transform.scale(gif_explosion[frame_index], (BOMB_ZONE_SIZE[0], BOMB_ZONE_SIZE[1]))
+                explosion_rect = explosion_image.get_rect(center=zone_rect.center)
+                screen.blit(explosion_image, explosion_rect)
+
+                if not bomb["damage_done"]:
+                    if zone_rect.colliderect(helico1.rect):
+                        helico1.take_damage()
+                    if zone_rect.colliderect(helico2.rect):
+                        helico2.take_damage()
+                    for obs in obstacles:
+                        if zone_rect.colliderect(obs.hitbox):
+                            obs.take_damage()
+                    bomb["damage_done"] = True
+
+                if now - bomb["explosion_start"] >= BOMB_EXPLOSION_MS:
+                    active_bombs.remove(bomb)
+
+        # Déclencher les tirs de rafale (nb_rafale fois)
+        for burst in pending_rafales[:]:
+            if now >= burst["next_fire"] and burst["remaining"] > 0:
+                shooter = burst["helico"]
+                direction = 1
+                shot_rect = pygame.Rect(0, shooter.rect.centery - 3, 14, 6)
+                shot_rect.left = shooter.rect.right
+
+                active_player_projectiles.append({
+                    "rect": shot_rect,
+                    "direction": direction,
+                    "owner": shooter,
+                })
+
+                burst["remaining"] -= 1
+                burst["next_fire"] = now + RAFALE_INTERVAL_MS
+
+            if burst["remaining"] <= 0:
+                pending_rafales.remove(burst)
+
+        # Mettre à jour et dessiner les projectiles de joueurs
+        for shot in active_player_projectiles[:]:
+            shot["rect"].x += shot["direction"] * PLAYER_SHOT_SPEED
+            pygame.draw.rect(screen, (255, 220, 80), shot["rect"])
+
+            hit_obstacle = False
+            for obs in obstacles:
+                if shot["rect"].colliderect(obs.hitbox):
+                    obs.take_damage()
+                    active_player_projectiles.remove(shot)
+                    hit_obstacle = True
+                    break
+            if hit_obstacle:
+                continue
+
+            target = helico2 if shot["owner"] is helico1 else helico1
+            if shot["rect"].colliderect(target.rect):
+                target.take_damage()
+                active_player_projectiles.remove(shot)
+                continue
+
+            if shot["rect"].right < 0 or shot["rect"].left > SCREEN_WIDTH:
+                active_player_projectiles.remove(shot)
+
+        obstacles = [o for o in obstacles if not o.is_dead()]
+
         # Hélicos
         helico1.move(SCREEN_WIDTH, SCREEN_HEIGHT)
         helico2.move(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        bonus_used_j1 = helico1.consume_pending_bonus()
+        if bonus_used_j1:
+            apply_bonus_effect(helico1, bonus_used_j1, obstacles)
+
+        bonus_used_j2 = helico2.consume_pending_bonus()
+        if bonus_used_j2:
+            apply_bonus_effect(helico2, bonus_used_j2, obstacles)
+
         print(helico1.lives, helico2.lives)
         screen.blit(helico1.image, helico1.rect)
         screen.blit(helico2.image, helico2.rect)
+
+        if helico1.shield_visual_active():
+            bulle_j1_rect = img_bulle_bouclier.get_rect(center=helico1.rect.center)
+            screen.blit(img_bulle_bouclier, bulle_j1_rect)
+
+        if helico2.shield_visual_active():
+            bulle_j2_rect = img_bulle_bouclier.get_rect(center=helico2.rect.center)
+            screen.blit(img_bulle_bouclier, bulle_j2_rect)
+
         if helico1.check_collision(helico2):
-           helico2.image.set_alpha(128)
+           if not helico2.is_transparent:
+               helico2.image.set_alpha(128)
         else:
-           helico2.image.set_alpha(255)
+           if not helico2.is_transparent:
+               helico2.image.set_alpha(255)
 
     elif etape == "EXPLOSION":
         screen.blit(image_desert, (0, 0))
