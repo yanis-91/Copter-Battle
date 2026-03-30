@@ -436,8 +436,9 @@ while running:
                         helico2.take_damage()
                     for obs in obstacles:
                         if zone_rect.colliderect(obs.hitbox):
-                            obs.take_damage()
-                    bomb["damage_done"] = True
+                            while not obs.is_dead():
+                                obs.take_damage()
+                bomb["damage_done"] = True
 
                 if now - bomb["explosion_start"] >= BOMB_EXPLOSION_MS:
                     active_bombs.remove(bomb)
