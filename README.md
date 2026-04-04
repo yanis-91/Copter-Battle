@@ -55,9 +55,10 @@ Ce projet a pour objectif de développer un jeu 2D en utilisant la bibliothèque
 Pour exécuter le projet Copter Battle, certaines installations préalables sont nécessaires.
 Tout d’abord, le projet est développé en Python. Il est recommandé d’utiliser une version de Python inférieure ou égale à 3.12, car certaines versions plus récentes ne sont pas entièrement compatibles avec la bibliothèque Pygame utilisée dans ce projet. Vous pouvez télécharger Python depuis le site officiel : https://www.python.org. Lors de l’installation, il est conseillé de cocher l’option “Add Python to PATH” afin de pouvoir exécuter Python depuis un terminal.
 Ensuite, le projet repose sur la bibliothèque Pygame, qui permet de gérer l’affichage graphique, les événements clavier ainsi que les interactions du jeu. Une fois Python installé, Pygame peut être installé via la commande suivante :
+
+```bash
 pip install pygame
-
-
+```
 
 Aucune autre dépendance externe n’est nécessaire, les autres modules utilisés (comme random ou socket) étant déjà inclus dans la bibliothèque standard de Python.
 Après l’installation des dépendances, il suffit de récupérer le projet (par clonage Git ou téléchargement manuel), puis de se placer dans le dossier racine. Il est important de conserver l’organisation des fichiers, notamment le dossier images/, qui contient les ressources graphiques indispensables au bon fonctionnement du jeu.
