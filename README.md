@@ -111,7 +111,6 @@ Le projet est organisé en plusieurs fichiers afin de séparer les différentes 
 
 Plusieurs améliorations peuvent être envisagées pour enrichir le projet :
 
-- ajout d’un mode multijoueur en ligne complet
 - ajout de nouveaux bonus et malus
 - intégration de sons et musiques
 - amélioration de l’interface utilisateur (menus, animations)
